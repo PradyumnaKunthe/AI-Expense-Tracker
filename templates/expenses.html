@@ -2,153 +2,543 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-    <!-- Bootstrap -->
+    <style>
+        .page-wrap {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+        /* ── Navbar ─────────────────────────── */
+        .nav-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 7px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.05);
+            transition: color 0.25s, background 0.25s, border-color 0.25s;
+        }
+        .nav-back:hover {
+            color: var(--text-primary);
+            background: var(--bg-elevated);
+            border-color: var(--border-default);
+        }
+        .nav-page-title {
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            background: var(--grad-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-    <!-- Bootstrap Icons -->
+        /* ── Summary bar ────────────────────── */
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .summary-tile {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .summary-tile .s-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+        .summary-tile .s-value {
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.03em;
+        }
 
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        /* ── Search / filter bar ────────────── */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-bar input,
+        .filter-bar select {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            padding: 9px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .filter-bar input { flex: 1; min-width: 180px; }
+        .filter-bar select { min-width: 160px; }
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            border-color: var(--accent-teal);
+            box-shadow: 0 0 0 3px var(--accent-teal-glow);
+        }
+        .filter-bar input::placeholder { color: var(--text-muted); }
 
-    <!-- CSS -->
+        /* ── Expense card — NEW DESIGN ──────── */
+        .xcard {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 0;
+            overflow: hidden;
+            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: stretch;
+        }
+        .xcard:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-default);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+        /* Coloured left strip */
+        .xcard-strip {
+            width: 4px;
+            flex-shrink: 0;
+            background: var(--grad-primary);
+        }
 
+        /* Icon column */
+        .xcard-icon-col {
+            width: 64px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        .xcard-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* Body */
+        .xcard-body {
+            flex: 1;
+            padding: 16px 12px 16px 4px;
+            min-width: 0;
+        }
+        .xcard-title {
+            font-family: 'Sora', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin: 0 0 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .xcard-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .xcard-cat {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 9px;
+            border-radius: 20px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: var(--accent-teal-bg);
+            color: var(--accent-teal);
+            border: 1px solid rgba(0,212,170,0.15);
+        }
+        .xcard-date {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Right side */
+        .xcard-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 20px;
+            flex-shrink: 0;
+        }
+        .xcard-amount {
+            font-family: 'Sora', sans-serif;
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: -0.03em;
+            color: var(--accent-coral);
+            white-space: nowrap;
+        }
+        .btn-del {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 13px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent-coral);
+            background: var(--accent-coral-bg);
+            border: 1px solid rgba(255,107,107,0.2);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+        .btn-del:hover {
+            background: rgba(255,107,107,0.2);
+            border-color: rgba(255,107,107,0.45);
+            color: var(--accent-coral);
+            transform: translateY(-1px);
+        }
+
+        /* Category icon colours */
+        .ic-food    { background: rgba(245,166,35,0.12);  color: #f5a623; }
+        .ic-travel  { background: rgba(124,140,248,0.12); color: #7c8cf8; }
+        .ic-health  { background: rgba(0,212,170,0.12);   color: #00d4aa; }
+        .ic-shop    { background: rgba(255,107,107,0.12); color: #ff6b6b; }
+        .ic-bills   { background: rgba(245,166,35,0.12);  color: #f5a623; }
+        .ic-edu     { background: rgba(124,140,248,0.12); color: #7c8cf8; }
+        .ic-default { background: rgba(99,130,181,0.12);  color: #8fa3be; }
+
+        /* Section label */
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        /* Page heading */
+        .page-heading {
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Count badge */
+        .count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Empty state */
+        .empty-wrap {
+            text-align: center;
+            padding: 80px 32px;
+        }
+        .empty-icon-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--text-muted);
+            margin: 0 auto 20px;
+        }
+        .empty-title {
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        /* No results (hidden by default) */
+        #noResults {
+            display: none;
+            text-align: center;
+            padding: 48px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 576px) {
+            .summary-bar { grid-template-columns: repeat(2, 1fr); }
+            .xcard-right { padding: 12px 14px; }
+            .xcard-amount { font-size: 1rem; }
+        }
+    </style>
 </head>
 
 <body>
 
     <!-- NAVBAR -->
-
-    <nav class="navbar navbar-dark px-4">
-
-        <a href="/"
-           class="navbar-brand text-decoration-none">
-
-            <i class="bi bi-arrow-left-circle-fill"></i>
-
+    <nav class="navbar px-4">
+        <a href="/" class="nav-back">
+            <i class="bi bi-arrow-left-short"></i>
             Dashboard
-
         </a>
-
-        <span class="navbar-brand">
-
-            Expense History
-
-        </span>
-
+        <span class="nav-page-title">Expense History</span>
     </nav>
 
-    <!-- MAIN CONTAINER -->
+    <div class="page-wrap">
 
-    <div class="container mt-5">
-
-        <!-- PAGE TITLE -->
-
+        <!-- Heading -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-
-            <h2>
-
-                Recent Transactions
-
-            </h2>
-
-            <span class="expense-count">
-
-                {{ expenses|length }} Expenses
-
+            <div>
+                <h2 class="page-heading">Transactions</h2>
+                <p style="font-size:0.82rem;color:var(--text-muted);margin:4px 0 0;">
+                    All your recorded expenses
+                </p>
+            </div>
+            <span class="count-badge">
+                <i class="bi bi-receipt"></i>
+                {{ expenses|length }} Expense{{ 's' if expenses|length != 1 }}
             </span>
-
         </div>
 
-        <!-- EXPENSE LIST -->
+        {% if expenses %}
 
+        <!-- Summary tiles -->
+        <div class="summary-bar">
+            <div class="summary-tile">
+                <span class="s-label">Total Spent</span>
+                <span class="s-value" style="color:var(--accent-coral)">₹{{ total_spent }}</span>
+            </div>
+            <div class="summary-tile">
+                <span class="s-label">Transactions</span>
+                <span class="s-value">{{ expenses|length }}</span>
+            </div>
+            <div class="summary-tile">
+                <span class="s-label">Latest Entry</span>
+                <span class="s-value" style="font-size:0.85rem;color:var(--text-secondary)">
+                    {{ expenses[0][5] if expenses }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Filter / Search -->
+        <div class="filter-bar">
+            <input type="text" id="searchInput" placeholder="🔍  Search by title…">
+            <select id="categoryFilter">
+                <option value="">All Categories</option>
+                <option>Food &amp; Dining</option>
+                <option>Groceries</option>
+                <option>Transportation</option>
+                <option>Fuel</option>
+                <option>Shopping</option>
+                <option>Entertainment</option>
+                <option>Movies</option>
+                <option>Gaming</option>
+                <option>Gym &amp; Fitness</option>
+                <option>Personal Care</option>
+                <option>Beauty</option>
+                <option>Clothing</option>
+                <option>Education</option>
+                <option>Books</option>
+                <option>Health &amp; Medical</option>
+                <option>Bills &amp; Utilities</option>
+                <option>Electricity Bill</option>
+                <option>Water Bill</option>
+                <option>Internet</option>
+                <option>Mobile Recharge</option>
+                <option>Rent</option>
+                <option>EMI</option>
+                <option>Insurance</option>
+                <option>Subscriptions</option>
+                <option>Investment</option>
+                <option>Savings</option>
+                <option>Taxes</option>
+                <option>Business</option>
+                <option>Freelancing</option>
+                <option>Family</option>
+                <option>Gifts &amp; Donations</option>
+                <option>Festivals</option>
+                <option>Child Care</option>
+                <option>Pets</option>
+                <option>Electronics</option>
+                <option>Home Appliances</option>
+                <option>Furniture</option>
+                <option>Maintenance</option>
+                <option>Travel</option>
+                <option>Emergency</option>
+                <option>Other</option>
+            </select>
+        </div>
+
+        <!-- List -->
+        <p class="section-label">All Expenses</p>
+
+        <div id="expenseList">
         {% for expense in expenses %}
+        {# indices: [0]=id [1]=user_id [2]=title [3]=amount [4]=category [5]=date [6]=time #}
+        {% set cat = expense[4] | lower %}
+        {% if 'food' in cat or 'dining' in cat or 'grocer' in cat %}
+            {% set ic = 'ic-food' %}{% set icon = 'bi-egg-fried' %}
+        {% elif 'travel' in cat or 'transport' in cat or 'fuel' in cat %}
+            {% set ic = 'ic-travel' %}{% set icon = 'bi-car-front-fill' %}
+        {% elif 'health' in cat or 'medical' in cat or 'gym' in cat or 'fitness' in cat %}
+            {% set ic = 'ic-health' %}{% set icon = 'bi-heart-pulse-fill' %}
+        {% elif 'shop' in cat or 'cloth' in cat or 'beauty' in cat or 'personal' in cat %}
+            {% set ic = 'ic-shop' %}{% set icon = 'bi-bag-fill' %}
+        {% elif 'bill' in cat or 'util' in cat or 'rent' in cat or 'emi' in cat or 'internet' in cat or 'mobile' in cat or 'electric' in cat %}
+            {% set ic = 'ic-bills' %}{% set icon = 'bi-receipt-cutoff' %}
+        {% elif 'edu' in cat or 'book' in cat %}
+            {% set ic = 'ic-edu' %}{% set icon = 'bi-book-fill' %}
+        {% elif 'entertain' in cat or 'movie' in cat or 'gaming' in cat %}
+            {% set ic = 'ic-travel' %}{% set icon = 'bi-controller' %}
+        {% else %}
+            {% set ic = 'ic-default' %}{% set icon = 'bi-cash-stack' %}
+        {% endif %}
 
-        <div class="expense-card mb-4">
+        <div class="xcard"
+             data-title="{{ expense[2] | lower }}"
+             data-category="{{ expense[4] }}">
 
-            <!-- LEFT -->
+            <div class="xcard-strip"></div>
 
-            <div class="expense-left">
-
-                <div class="expense-icon">
-
-                    <i class="bi bi-cash-stack"></i>
-
+            <div class="xcard-icon-col">
+                <div class="xcard-icon {{ ic }}">
+                    <i class="bi {{ icon }}"></i>
                 </div>
-
-                <div>
-
-                    <h4 class="mb-1">
-
-                        {{ expense[1] }}
-
-                    </h4>
-
-                    <p class="expense-category mb-1">
-
-                        {{ expense[3] }}
-
-                    </p>
-
-                    <small class="expense-date">
-
-                        <i class="bi bi-calendar-event"></i>
-
-                        {{ expense[4] }}
-
-                        &nbsp;&nbsp;
-
-                        <i class="bi bi-clock"></i>
-
-                        {{ expense[5] }}
-
-                    </small>
-
-                </div>
-
             </div>
 
-            <!-- RIGHT -->
+            <div class="xcard-body">
+                <div class="xcard-title">{{ expense[2] }}</div>
+                <div class="xcard-meta">
+                    <span class="xcard-cat">
+                        <i class="bi bi-tag-fill"></i>
+                        {{ expense[4] }}
+                    </span>
+                    <span class="xcard-date">
+                        <i class="bi bi-calendar3"></i>
+                        {{ expense[5] }}
+                    </span>
+                    <span class="xcard-date">
+                        <i class="bi bi-clock"></i>
+                        {{ expense[6] }}
+                    </span>
+                </div>
+            </div>
 
-            <div class="expense-right">
-
-                <h3 class="expense-amount">
-
-                    ₹{{ expense[2] }}
-
-                </h3>
-
-                <!-- DELETE BUTTON -->
-
+            <div class="xcard-right">
+                <div class="xcard-amount">− ₹{{ expense[3] }}</div>
                 <a href="/delete/{{ expense[0] }}"
-                   class="btn btn-danger btn-sm mt-2">
-
-                    <i class="bi bi-trash-fill"></i>
-
+                   class="btn-del"
+                   onclick="return confirm('Delete \'{{ expense[2] }}\'?')">
+                    <i class="bi bi-trash3-fill"></i>
                     Delete
-
                 </a>
-
             </div>
 
         </div>
-
         {% endfor %}
+        </div>
+
+        <div id="noResults">
+            <i class="bi bi-search" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:12px"></i>
+            No expenses match your search.
+        </div>
+
+        {% else %}
+
+        <div class="empty-wrap">
+            <div class="empty-icon-box"><i class="bi bi-receipt-cutoff"></i></div>
+            <div class="empty-title">No expenses yet</div>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:24px">
+                Go back to the dashboard to add your first expense.
+            </p>
+            <a href="/" class="btn btn-primary px-4">
+                <i class="bi bi-plus-lg me-2"></i>Add First Expense
+            </a>
+        </div>
+
+        {% endif %}
 
     </div>
 
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script>
+        // ── Theme ──────────────────────────────
+        if (localStorage.getItem('expenseTrackerTheme') === 'light') {
+            document.body.classList.add('light-mode');
+        }
+
+        // ── Search + Filter ────────────────────
+        const searchInput    = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const cards          = document.querySelectorAll('.xcard');
+        const noResults      = document.getElementById('noResults');
+
+        function filterCards() {
+            const q   = searchInput ? searchInput.value.toLowerCase() : '';
+            const cat = categoryFilter ? categoryFilter.value.toLowerCase() : '';
+            let visible = 0;
+
+            cards.forEach(card => {
+                const titleMatch = card.dataset.title.includes(q);
+                const catMatch   = cat === '' || card.dataset.category.toLowerCase() === cat;
+                const show       = titleMatch && catMatch;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+        }
+
+        if (searchInput)    searchInput.addEventListener('input', filterCards);
+        if (categoryFilter) categoryFilter.addEventListener('change', filterCards);
+    </script>
+
+</body>
 </html>

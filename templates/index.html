@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AI Expense Tracker</title>
+
+    <!-- Bootstrap -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- CSS -->
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <!-- TOAST -->
+
+    {% with messages = get_flashed_messages() %}
+
+    {% if messages %}
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+
+        <div class="toast show custom-toast">
+
+            <div class="toast-header">
+
+                <strong class="me-auto text-success">
+
+                    Success
+
+                </strong>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="toast">
+
+                </button>
+
+            </div>
+
+            <div class="toast-body text-dark">
+
+                {{ messages[0] }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    {% endwith %}
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar navbar-dark px-4 py-3">
+
+        <!-- LEFT -->
+
+        <span class="navbar-brand mb-0 h1">
+
+            <i class="bi bi-wallet2"></i>
+
+            AI Expense Tracker
+
+        </span>
+
+        <!-- RIGHT -->
+
+        <div class="d-flex align-items-center gap-3">
+
+            <!-- USERNAME -->
+
+            <span class="text-white fw-bold">
+
+                <i class="bi bi-person-circle"></i>
+
+                {{ username }}
+
+            </span>
+
+            <!-- SETTINGS BUTTON -->
+
+            <button class="btn btn-light"
+                    data-bs-toggle="modal"
+                    data-bs-target="#budgetModal">
+
+                <i class="bi bi-gear-fill"></i>
+
+            </button>
+
+            <!-- LOGOUT BUTTON -->
+
+            <a href="/logout"
+               class="btn btn-danger">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                Logout
+
+            </a>
+
+        </div>
+
+    </nav>
+
+    <!-- SETTINGS MODAL -->
+
+    <div class="modal fade"
+         id="budgetModal"
+         tabindex="-1">
+
+        <div class="modal-dialog">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+
+                        Monthly Budget Settings
+
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal">
+
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <form action="/set_budget"
+                          method="POST">
+
+                        <!-- MONTH -->
+
+                        <label class="form-label text-dark">
+
+                            Select Month
+
+                        </label>
+
+                        <select class="form-select mb-3"
+                                name="month"
+                                required>
+
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+
+                        </select>
+
+                        <!-- YEAR -->
+
+                        <label class="form-label text-dark">
+
+                            Enter Year
+
+                        </label>
+
+                        <input type="number"
+                               class="form-control mb-3"
+                               name="year"
+                               placeholder="2026"
+                               required>
+
+                        <!-- BUDGET -->
+
+                        <label class="form-label text-dark">
+
+                            Enter Monthly Budget
+
+                        </label>
+
+                        <input type="number"
+                               class="form-control"
+                               name="budget"
+                               placeholder="Enter budget"
+                               required>
+
+                        <!-- SAVE -->
+
+                        <button class="btn btn-primary w-100 mt-4">
+
+                            Save Settings
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN -->
+
+    <div class="container mt-5">
+
+        <!-- DASHBOARD -->
+
+        <div class="row g-4">
+
+            <!-- BUDGET -->
+
+            <div class="col-md-4">
+
+                <div class="dashboard-card">
+
+                    <h5>Monthly Budget</h5>
+
+                    <h2>₹{{ budget }}</h2>
+
+                </div>
+
+            </div>
+
+            <!-- REMAINING -->
+
+            <div class="col-md-4">
+
+                <div class="dashboard-card">
+
+                    <h5>Remaining Balance</h5>
+
+                    <h2>₹{{ remaining }}</h2>
+
+                </div>
+
+            </div>
+
+            <!-- DAYS LEFT -->
+
+            <div class="col-md-4">
+
+                <div class="dashboard-card">
+
+                    <h5>Days Left</h5>
+
+                    <h2>{{ days_left }} Days</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- AI INSIGHTS -->
+
+        <div class="glass-card p-4 mt-5">
+
+            <div class="d-flex align-items-center mb-4">
+
+                <i class="bi bi-robot me-3"
+                   style="font-size: 40px; color: #00c6ff;"></i>
+
+                <div>
+
+                    <h3 class="mb-0">
+
+                        AI Financial Insights
+
+                    </h3>
+
+                    <small>
+
+                        Smart expense analysis powered by AI
+
+                    </small>
+
+                </div>
+
+            </div>
+
+            <!-- INSIGHTS -->
+
+            {% for insight in insights %}
+
+            <div class="insight-card mb-3">
+
+                <i class="bi bi-stars me-2"></i>
+
+                {{ insight }}
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- FORM + NAVIGATION -->
+
+        <div class="row mt-5">
+
+            <!-- ADD EXPENSE FORM -->
+
+            <div class="col-lg-4">
+
+                <div class="glass-card p-4">
+
+                    <h3 class="mb-4">
+
+                        Add Expense
+
+                    </h3>
+
+                    <form action="/add"
+                          method="POST">
+
+                        <!-- TITLE -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Expense Title
+
+                            </label>
+
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="Enter expense title"
+                                   name="title"
+                                   required>
+
+                        </div>
+
+                        <!-- AMOUNT -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Amount
+
+                            </label>
+
+                            <input type="number"
+                                   class="form-control"
+                                   placeholder="Enter amount"
+                                   name="amount"
+                                   required>
+
+                        </div>
+
+                        <!-- CATEGORY -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Category
+
+                            </label>
+
+                            <select class="form-select"
+                                    name="category">
+
+                                <option>Food & Dining</option>
+                                <option>Groceries</option>
+                                <option>Travel</option>
+                                <option>Transportation</option>
+                                <option>Fuel</option>
+                                <option>Shopping</option>
+                                <option>Entertainment</option>
+                                <option>Movies</option>
+                                <option>Gaming</option>
+                                <option>Education</option>
+                                <option>Books</option>
+                                <option>Health & Medical</option>
+                                <option>Gym & Fitness</option>
+                                <option>Bills & Utilities</option>
+                                <option>Electricity Bill</option>
+                                <option>Water Bill</option>
+                                <option>Internet</option>
+                                <option>Mobile Recharge</option>
+                                <option>Rent</option>
+                                <option>EMI</option>
+                                <option>Insurance</option>
+                                <option>Investment</option>
+                                <option>Savings</option>
+                                <option>Clothing</option>
+                                <option>Personal Care</option>
+                                <option>Beauty</option>
+                                <option>Subscriptions</option>
+                                <option>Pets</option>
+                                <option>Family</option>
+                                <option>Gifts & Donations</option>
+                                <option>Festivals</option>
+                                <option>Business</option>
+                                <option>Freelancing</option>
+                                <option>Taxes</option>
+                                <option>Electronics</option>
+                                <option>Home Appliances</option>
+                                <option>Furniture</option>
+                                <option>Maintenance</option>
+                                <option>Child Care</option>
+                                <option>Emergency</option>
+                                <option>Other</option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- BUTTON -->
+
+                        <button class="btn btn-primary w-100">
+
+                            Add Expense
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <!-- NAVIGATION CARDS -->
+
+            <div class="col-lg-8">
+
+                <div class="row g-4">
+
+                    <!-- EXPENSES -->
+
+                    <div class="col-md-6">
+
+                        <a href="/expenses"
+                           class="text-decoration-none">
+
+                            <div class="navigation-card">
+
+                                <i class="bi bi-receipt-cutoff nav-icon"></i>
+
+                                <h3 class="mt-3">
+
+                                    Expenses
+
+                                </h3>
+
+                                <p>
+
+                                    View all expenses
+                                    in professional layout
+
+                                </p>
+
+                            </div>
+
+                        </a>
+
+                    </div>
+
+                    <!-- CHARTS -->
+
+                    <div class="col-md-6">
+
+                        <a href="/charts"
+                           class="text-decoration-none">
+
+                            <div class="navigation-card">
+
+                                <i class="bi bi-bar-chart-fill nav-icon"></i>
+
+                                <h3 class="mt-3">
+
+                                    Charts
+
+                                </h3>
+
+                                <p>
+
+                                    View analytics &
+                                    AI-powered graphs
+
+                                </p>
+
+                            </div>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

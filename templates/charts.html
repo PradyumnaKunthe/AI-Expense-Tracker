@@ -2,152 +2,717 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Charts</title>
 
-    <!-- Bootstrap -->
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Chart.js -->
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-    <!-- CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+        :root {
+            --accent: #7C6FFF;
+            --accent-2: #FF6B6B;
+            --accent-3: #FFD166;
+            --accent-4: #06D6A0;
+            --accent-5: #118AB2;
+            --accent-6: #FF9A3C;
+            --card-bg: rgba(255,255,255,0.04);
+            --card-border: rgba(255,255,255,0.08);
+            --text-muted: rgba(255,255,255,0.45);
+            --glow: 0 0 40px rgba(124,111,255,0.15);
+        }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0A0A0F;
+            color: #F0EFF8;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background orbs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px; left: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(124,111,255,0.12) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -200px; right: -200px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(6,214,160,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1rem 2rem;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-muted) !important;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+            transition: color 0.2s;
+        }
+        .navbar-brand:hover { color: #F0EFF8 !important; }
+        .navbar-brand i { margin-right: 6px; }
+        .nav-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--accent), var(--accent-4));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            padding: 3rem 0 2rem;
+            position: relative; z-index: 1;
+        }
+        .page-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+        }
+        .page-header h1 span {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(124,111,255,0.12);
+            border: 1px solid rgba(124,111,255,0.25);
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .ai-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* STAT STRIP */
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            position: relative; z-index: 1;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .stat-card:hover {
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+        .stat-card .label {
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+        .stat-card .value {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #F0EFF8;
+        }
+        .stat-card .dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        /* CHART TABS */
+        .chart-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            position: relative; z-index: 1;
+        }
+        .chart-tab {
+            padding: 8px 18px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .chart-tab.active, .chart-tab:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* CHART PANELS */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            position: relative; z-index: 1;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        .chart-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.75rem;
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .chart-panel:hover {
+            border-color: rgba(124,111,255,0.3);
+            box-shadow: var(--glow);
+        }
+        .chart-panel.wide {
+            grid-column: 1 / -1;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+        .panel-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .panel-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .panel-badge {
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 4px 10px;
+            border-radius: 100px;
+            background: rgba(124,111,255,0.12);
+            color: var(--accent);
+            border: 1px solid rgba(124,111,255,0.2);
+        }
+
+        /* Custom legends */
+        .legend-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            margin-top: 1rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+        .legend-dot {
+            width: 10px; height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        /* TOP CATEGORIES LIST */
+        .cat-list {
+            list-style: none;
+            margin-top: 0.5rem;
+        }
+        .cat-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .cat-list li:last-child { border-bottom: none; }
+        .cat-bar-track {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+        .cat-bar-fill {
+            height: 100%;
+            border-radius: 100px;
+            transition: width 0.8s ease;
+        }
+        .cat-name {
+            width: 110px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cat-amount {
+            font-size: 0.8rem;
+            font-weight: 500;
+            font-family: 'Syne', sans-serif;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* INSIGHT CARDS */
+        .insights-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+            position: relative; z-index: 1;
+        }
+        .insight-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            transition: border-color 0.2s;
+        }
+        .insight-card:hover { border-color: rgba(255,255,255,0.12); }
+        .insight-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .insight-text .title {
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-bottom: 3px;
+        }
+        .insight-text .desc {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Animate in */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.5s forwards;
+        }
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up:nth-child(1) { animation-delay: 0.05s; }
+        .fade-up:nth-child(2) { animation-delay: 0.12s; }
+        .fade-up:nth-child(3) { animation-delay: 0.19s; }
+        .fade-up:nth-child(4) { animation-delay: 0.26s; }
+    </style>
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
+<nav class="navbar navbar-dark px-4 d-flex justify-content-between align-items-center">
+    <a href="/" class="navbar-brand">
+        <i class="bi bi-arrow-left-circle-fill"></i> Dashboard
+    </a>
+    <span class="nav-title">Analytics</span>
+</nav>
 
-    <nav class="navbar navbar-dark px-4">
+<div class="container py-4">
 
-        <a href="/"
-           class="navbar-brand text-decoration-none">
+    <div class="page-header">
+        <div class="ai-badge">AI Analytics</div>
+        <h1>Expense<br><span>Insights</span></h1>
+        <p>Visual breakdown of your spending patterns.</p>
+    </div>
 
-            <i class="bi bi-arrow-left-circle-fill"></i>
+    <div class="stat-strip">
+        {% set total = amounts | sum %}
+        {% set top_cat = categories[amounts.index(amounts | max)] if amounts else 'N/A' %}
+        <div class="stat-card fade-up">
+            <div class="label">Total Spent</div>
+            <div class="value">₹{{ "{:,.0f}".format(total) }}</div>
+        </div>
+        <div class="stat-card fade-up">
+            <div class="label">Categories</div>
+            <div class="value">{{ categories | length }}</div>
+        </div>
+        <div class="stat-card fade-up">
+            <div class="label">Top Category</div>
+            <div class="value" style="font-size:1rem; padding-top:4px;">{{ top_cat }}</div>
+        </div>
+        <div class="stat-card fade-up">
+            <div class="label">Avg per Category</div>
+            <div class="value">₹{{ "{:,.0f}".format(total / (categories|length) if categories else 0) }}</div>
+        </div>
+    </div>
 
-            Dashboard
+    <div class="charts-grid">
 
-        </a>
-
-        <span class="navbar-brand">
-
-            Expense Analytics
-
-        </span>
-
-    </nav>
-
-    <!-- MAIN CONTAINER -->
-
-    <div class="container mt-5">
-
-        <!-- TITLE -->
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-
-            <h2>
-
-                Expense Insights
-
-            </h2>
-
-            <span class="expense-count">
-
-                AI Analytics
-
-            </span>
-
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Category Breakdown</div>
+                    <div class="panel-subtitle">Spending by category</div>
+                </div>
+                <span class="panel-badge">Pie</span>
+            </div>
+            <div style="position:relative; width:100%; height:260px;">
+                <canvas id="pieChart" role="img" aria-label="Pie chart showing expense breakdown by category"></canvas>
+            </div>
+            <div class="legend-row" id="pieLegend"></div>
         </div>
 
-        <!-- CHART CARD -->
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Top Categories</div>
+                    <div class="panel-subtitle">Ranked by amount</div>
+                </div>
+                <span class="panel-badge">Rank</span>
+            </div>
+            <ul class="cat-list" id="catList"></ul>
+        </div>
 
-        <div class="glass-card p-5">
+        <div class="chart-panel wide">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Monthly Spending Trend</div>
+                    <div class="panel-subtitle">Last 6 months of expenses</div>
+                </div>
+                <span class="panel-badge">Trend</span>
+            </div>
+            <div style="position:relative; width:100%; height:220px;">
+                <canvas id="barChart" role="img" aria-label="Bar chart showing monthly spending over the last 6 months"></canvas>
+            </div>
+        </div>
 
-            <h3 class="mb-4 text-center">
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Spending Split</div>
+                    <div class="panel-subtitle">Top 5 vs rest</div>
+                </div>
+                <span class="panel-badge">Donut</span>
+            </div>
+            <div style="position:relative; width:100%; height:220px;">
+                <canvas id="donutChart" role="img" aria-label="Donut chart showing top 5 categories vs remaining spending"></canvas>
+            </div>
+        </div>
 
-                Category Wise Expenses
-
-            </h3>
-
-            <canvas id="expenseChart"></canvas>
-
+        <div class="chart-panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Spending Radar</div>
+                    <div class="panel-subtitle">Category profile</div>
+                </div>
+                <span class="panel-badge">Radar</span>
+            </div>
+            <div style="position:relative; width:100%; height:220px;">
+                <canvas id="radarChart" role="img" aria-label="Radar chart visualizing your spending across all categories"></canvas>
+            </div>
         </div>
 
     </div>
 
-    <!-- CHART SCRIPT -->
+    <div class="insights-row">
+        <div class="insight-card">
+            <div class="insight-icon" style="background:rgba(124,111,255,0.12); color:#7C6FFF;">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="insight-text">
+                <div class="title">Highest Spend</div>
+                <div class="desc" id="insight1">Analyzing your top category...</div>
+            </div>
+        </div>
+        <div class="insight-card">
+            <div class="insight-icon" style="background:rgba(6,214,160,0.12); color:#06D6A0;">
+                <i class="bi bi-piggy-bank"></i>
+            </div>
+            <div class="insight-text">
+                <div class="title">Savings Tip</div>
+                <div class="desc" id="insight2">Reviewing your spending habits...</div>
+            </div>
+        </div>
+        <div class="insight-card">
+            <div class="insight-icon" style="background:rgba(255,107,107,0.12); color:#FF6B6B;">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="insight-text">
+                <div class="title">Watch Out</div>
+                <div class="desc" id="insight3">Calculating spending risk areas...</div>
+            </div>
+        </div>
+        <div class="insight-card">
+            <div class="insight-icon" style="background:rgba(255,209,102,0.12); color:#FFD166;">
+                <i class="bi bi-stars"></i>
+            </div>
+            <div class="insight-text">
+                <div class="title">AI Score</div>
+                <div class="desc" id="insight4">Building your financial profile...</div>
+            </div>
+        </div>
+    </div>
 
-    <script>
+</div>
 
-        const ctx = document.getElementById('expenseChart');
+<script type="text/json" id="jinjaCategories">{{ categories | safe }}</script>
+<script type="text/json" id="jinjaAmounts">{{ amounts | safe }}</script>
+<script type="text/json" id="jinjaMonthLabels">{{ month_labels | default(['Jan','Feb','Mar','Apr','May','Jun']) | safe }}</script>
+<script type="text/json" id="jinjaMonthAmounts">{{ monthly_amounts | default([0,0,0,0,0,0]) | safe }}</script>
 
-        new Chart(ctx, {
+<script>
+const COLORS = ['#7C6FFF','#FF6B6B','#06D6A0','#FFD166','#118AB2','#FF9A3C','#C77DFF','#4CC9F0','#F72585','#7FD1AE'];
 
-            type: 'pie',
+// Helper to safely parse JSON strings and automatically fix single quotes coming from Python list strings
+const parseBackendData = (elementId, fallback) => {
+    try {
+        const rawText = document.getElementById(elementId).textContent.trim();
+        if (!rawText) return fallback;
+        const validJsonText = rawText.replace(/'/g, '"');
+        return JSON.parse(validJsonText);
+    } catch (e) {
+        console.error("Failed to parse backend data for element: " + elementId, e);
+        return fallback;
+    }
+};
 
-            data: {
+const rawLabels = parseBackendData('jinjaCategories', []);
+const rawAmounts = parseBackendData('jinjaAmounts', []);
+const monthLabels = parseBackendData('jinjaMonthLabels', ['Jan','Feb','Mar','Apr','May','Jun']);
+const monthAmounts = parseBackendData('jinjaMonthAmounts', [0,0,0,0,0,0]);
 
-                labels: {{ categories | safe }},
+const total = rawAmounts.reduce((a,b) => a+b, 0);
 
-                datasets: [{
+// Sort by amount desc
+const sorted = rawLabels.map((l,i) => ({label:l, amount:rawAmounts[i]})).sort((a,b)=>b.amount-a.amount);
+const labels = sorted.map(x=>x.label);
+const amounts = sorted.map(x=>x.amount);
 
-                    label: 'Expenses',
-
-                    data: {{ amounts | safe }},
-
-                    borderWidth: 2
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                plugins: {
-
-                    legend: {
-
-                        labels: {
-
-                            color: 'white',
-
-                            font: {
-
-                                size: 14
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
+// PIE CHART
+const pieCtx = document.getElementById('pieChart');
+const pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+        labels: labels,
+        datasets: [{
+            data: amounts,
+            backgroundColor: COLORS.map(c => c + 'CC'),
+            borderColor: '#0A0A0F',
+            borderWidth: 3
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+            callbacks: {
+                label: ctx => ` ₹${ctx.parsed.toLocaleString()} (${((ctx.parsed/total)*100).toFixed(1)}%)`
             }
+        }}
+    }
+});
 
-        });
+// PIE LEGEND
+const pieLegendEl = document.getElementById('pieLegend');
+labels.forEach((l,i) => {
+    const el = document.createElement('div');
+    el.className = 'legend-item';
+    el.innerHTML = `<span class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></span>${l}`;
+    pieLegendEl.appendChild(el);
+});
 
-    </script>
+// TOP CATEGORIES LIST
+const catListEl = document.getElementById('catList');
+const maxAmt = amounts[0] || 1;
+labels.slice(0,8).forEach((l,i) => {
+    const pct = ((amounts[i]/maxAmt)*100).toFixed(1);
+    const li = document.createElement('li');
+    li.innerHTML = `
+        <span class="cat-name">${l}</span>
+        <div class="cat-bar-track">
+            <div class="cat-bar-fill" style="width:0%; background:${COLORS[i%COLORS.length]}" data-target="${pct}"></div>
+        </div>
+        <span class="cat-amount">₹${amounts[i].toLocaleString()}</span>`;
+    catListEl.appendChild(li);
+});
+setTimeout(() => {
+    document.querySelectorAll('.cat-bar-fill').forEach(el => {
+        el.style.width = el.dataset.target + '%';
+    });
+}, 100);
 
+// MONTHLY BAR CHART
+const barCtx = document.getElementById('barChart');
+new Chart(barCtx, {
+    type: 'bar',
+    data: {
+        labels: monthLabels,
+        datasets: [{
+            label: 'Spent',
+            data: monthAmounts,
+            backgroundColor: COLORS[0] + '99',
+            borderColor: COLORS[0],
+            borderWidth: 1.5,
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: {
+            callbacks: { label: ctx => ` ₹${ctx.parsed.y.toLocaleString()}` }
+        }},
+        scales: {
+            x: { ticks: { color: 'rgba(255,255,255,0.4)', font:{size:11} }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            y: { ticks: { color: 'rgba(255,255,255,0.4)', font:{size:11}, callback: v => '₹'+v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        }
+    }
+});
+
+// DONUT (top 5 vs rest)
+const top5Labels = labels.slice(0,5);
+const top5Amounts = amounts.slice(0,5);
+const rest = amounts.slice(5).reduce((a,b)=>a+b,0);
+if(rest > 0){ top5Labels.push('Others'); top5Amounts.push(rest); }
+const donutCtx = document.getElementById('donutChart');
+new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+        labels: top5Labels,
+        datasets: [{
+            data: top5Amounts,
+            backgroundColor: [...COLORS.slice(0,5).map(c=>c+'CC'), '#888888AA'],
+            borderColor: '#0A0A0F',
+            borderWidth: 3,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: { legend: { display: false }, tooltip: {
+            callbacks: { label: ctx => ` ₹${ctx.parsed.toLocaleString()} (${((ctx.parsed/total)*100).toFixed(1)}%)` }
+        }}
+    }
+});
+
+// RADAR CHART
+const radarLabels = labels.slice(0,8);
+const radarAmounts = amounts.slice(0,8);
+const radarCtx = document.getElementById('radarChart');
+new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+        labels: radarLabels,
+        datasets: [{
+            label: 'Spending',
+            data: radarAmounts,
+            backgroundColor: 'rgba(124,111,255,0.18)',
+            borderColor: '#7C6FFF',
+            borderWidth: 2,
+            pointBackgroundColor: '#7C6FFF',
+            pointRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            r: {
+                ticks: { display: false },
+                grid: { color: 'rgba(255,255,255,0.07)' },
+                pointLabels: { color: 'rgba(255,255,255,0.5)', font:{size:10} }
+            }
+        }
+    }
+});
+
+// AI INSIGHTS
+if(labels.length > 0){
+    const topCat = labels[0];
+    const topPct = ((amounts[0]/total)*100).toFixed(1);
+    document.getElementById('insight1').textContent = `${topCat} is your biggest spend at ${topPct}% of total expenses.`;
+
+    const numCats = labels.length;
+    document.getElementById('insight2').textContent = numCats > 5
+        ? `You're spending across ${numCats} categories. Try consolidating to 4–5 to simplify.`
+        : `Good — you keep spending focused across ${numCats} categories.`;
+
+    const riskCats = ['Entertainment','Shopping','Food & Dining'];
+    const highRisk = labels.filter(l => riskCats.some(r => l.toLowerCase().includes(r.toLowerCase())));
+    document.getElementById('insight3').textContent = highRisk.length > 0
+        ? `Watch: ${highRisk.slice(0,2).join(', ')} can often be reduced with small habit changes.`
+        : `No major red flags. Your spending mix looks balanced.`;
+
+    const score = Math.min(100, Math.round(80 - (amounts[0]/total)*30 + (1/(numCats||1))*10));
+    document.getElementById('insight4').textContent = `Financial discipline score: ${score}/100. ${score >= 70 ? 'Well done! 🎯' : 'Room for improvement.'}`;
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

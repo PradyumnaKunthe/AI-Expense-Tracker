@@ -6,16 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Expense Tracker</title>
 
-    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 
-    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
@@ -25,6 +21,7 @@
             border: 1px solid var(--border-default);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(12px);
         }
         .modal-header {
             border-bottom: 1px solid var(--border-subtle);
@@ -69,13 +66,14 @@
             justify-content: center;
             font-size: 1rem;
             cursor: pointer;
-            transition: background 0.25s, color 0.25s, border-color 0.25s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
         }
         .nav-btn:hover {
             background: var(--bg-elevated);
             border-color: var(--border-default);
             color: var(--text-primary);
+            transform: translateY(-1px);
         }
         .nav-btn.danger:hover {
             background: rgba(255,107,107,0.12);
@@ -136,7 +134,7 @@
         .card-savings   .card-icon { background: rgba(61,220,151,0.12);  color: #3ddc97;              border: 1px solid rgba(61,220,151,0.2); }
 
         /* Savings card value changes colour when negative */
-        .card-savings .stat-value.negative { color: var(--accent-coral, #ff6b6b); }
+        .card-savings .stat-value.negative { color: var(--accent-coral); }
         .card-savings .savings-badge {
             display: inline-flex;
             align-items: center;
@@ -154,7 +152,7 @@
         }
         .card-savings .savings-badge.bad {
             background: rgba(255,107,107,0.12);
-            color: var(--accent-coral, #ff6b6b);
+            color: var(--accent-coral);
             border: 1px solid rgba(255,107,107,0.25);
         }
 
@@ -174,41 +172,7 @@
             color: var(--text-primary);
         }
 
-        /* ── AI Insights header ─────────────── */
-        .insights-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .insights-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            background: var(--accent-teal-bg);
-            border: 1px solid rgba(0,212,170,0.18);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            color: var(--accent-teal);
-            flex-shrink: 0;
-        }
-        .insights-title {
-            font-family: 'Sora', sans-serif;
-            font-weight: 700;
-            font-size: 1.1rem;
-            letter-spacing: -0.02em;
-            color: var(--text-primary);
-            margin: 0 0 2px;
-        }
-        .insights-sub {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin: 0;
-        }
-
-        /* ── Navigation cards (fixed size) ─── */
+        /* ── Navigation cards ── */
         .navigation-card h3 {
             font-family: 'Sora', sans-serif;
             font-weight: 600;
@@ -259,16 +223,13 @@
 
 <body>
 
-    <!-- ═══════════════════════════════════
-         TOAST (flash messages)
-    ═══════════════════════════════════ -->
     {% with messages = get_flashed_messages() %}
     {% if messages %}
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
         <div class="toast show custom-toast" role="alert">
             <div class="toast-header">
-                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                <strong class="me-auto" style="color:var(--accent-teal); font-size:0.85rem;">Success</strong>
+                <i class="bi bi-info-circle-fill me-2 text-info"></i>
+                <strong class="me-auto">Notification</strong>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
             </div>
             <div class="toast-body">
@@ -279,65 +240,49 @@
     {% endif %}
     {% endwith %}
 
-    <!-- ═══════════════════════════════════
-         NAVBAR
-    ═══════════════════════════════════ -->
     <nav class="navbar px-4">
-        <!-- Brand -->
         <a class="navbar-brand" href="/">
             <i class="bi bi-wallet2 me-2" style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;"></i>
             ExpenseAI
         </a>
 
-        <!-- Right controls -->
         <div class="d-flex align-items-center gap-2">
 
-            <!-- Username chip -->
             <div class="user-chip d-none d-md-inline-flex">
                 <div class="avatar">{{ username[0]|upper if username else 'U' }}</div>
                 {{ username }}
             </div>
 
-            <!-- Settings -->
-            <button class="nav-btn"
+            <button class="nav-btn" 
                     title="Budget settings"
-                    data-bs-toggle="modal"
+                    data-bs-toggle="modal" 
                     data-bs-target="#budgetModal">
                 <i class="bi bi-sliders2"></i>
             </button>
 
-            <!-- Theme toggle -->
-            <button class="nav-btn theme-btn"
-                    id="themeToggle"
+            <button class="nav-btn theme-btn" 
+                    id="themeToggle" 
                     title="Toggle theme">
                 <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
             </button>
 
-            <!-- Logout -->
             <a href="/logout" class="nav-btn danger" title="Logout">
                 <i class="bi bi-box-arrow-right"></i>
             </a>
         </div>
     </nav>
 
-    <!-- ═══════════════════════════════════
-         SETTINGS MODAL
-    ═══════════════════════════════════ -->
     <div class="modal fade" id="budgetModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-sliders2 me-2" style="color:var(--accent-teal)"></i>
-                        Budget Settings
-                    </h5>
+                    <h5 class="modal-title">Budget Settings</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form action="/set_budget" method="POST">
-
                         <div class="mb-3">
-                            <label class="form-label">Select Month</label>
+                            <label class="form-label style-sm">Select Month</label>
                             <select class="form-select" name="month" required>
                                 <option value="">Choose month…</option>
                                 <option value="1">January</option>
@@ -356,39 +301,29 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Year</label>
-                            <input type="number" class="form-control"
-                                   name="year" placeholder="2026"
-                                   min="2020" max="2100" required>
+                            <label class="form-label style-sm">Year</label>
+                            <input type="number" class="form-control" name="year" placeholder="2025" min="2020" max="2100" required>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Monthly Budget (₹)</label>
-                            <input type="number" class="form-control"
-                                   name="budget" placeholder="e.g. 25000"
-                                   min="0" required>
+                            <label class="form-label style-sm">Monthly Budget (₹)</label>
+                            <input type="number" class="form-control" name="budget" placeholder="e.g. 25000" min="0" required>
                         </div>
 
-                        <button class="btn btn-primary w-100">
-                            <i class="bi bi-floppy-fill me-2"></i>Save Settings
-                        </button>
+                        <button class="btn btn-primary w-100 py-2">Save Settings</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════
-         MAIN CONTENT
-    ═══════════════════════════════════ -->
     <div class="page-wrap">
 
-        <!-- ── Dashboard Cards ──────────────── -->
         <p class="section-label">Overview</p>
         <div class="row g-3 mb-5">
-
+            
             <div class="col-md-3 col-sm-6">
-                <div class="dashboard-card card-budget fade-up stagger-1">
+                <div class="dashboard-card card-budget glass-card card p-4 fade-up stagger-1">
                     <div class="card-icon"><i class="bi bi-wallet2"></i></div>
                     <div class="stat-label">Monthly Budget</div>
                     <div class="stat-value">₹{{ budget }}</div>
@@ -396,7 +331,7 @@
             </div>
 
             <div class="col-md-3 col-sm-6">
-                <div class="dashboard-card card-remaining fade-up stagger-2">
+                <div class="dashboard-card card-remaining glass-card card p-4 fade-up stagger-2">
                     <div class="card-icon"><i class="bi bi-piggy-bank"></i></div>
                     <div class="stat-label">Remaining Balance</div>
                     <div class="stat-value">₹{{ remaining }}</div>
@@ -404,18 +339,17 @@
             </div>
 
             <div class="col-md-3 col-sm-6">
-                <div class="dashboard-card card-days fade-up stagger-3">
+                <div class="dashboard-card card-days glass-card card p-4 fade-up stagger-3">
                     <div class="card-icon"><i class="bi bi-calendar3"></i></div>
                     <div class="stat-label">Days Left in Month</div>
                     <div class="stat-value">{{ days_left }}</div>
                 </div>
             </div>
 
-            <!-- ── NEW: Savings Card ─────────── -->
             <div class="col-md-3 col-sm-6">
-                <div class="dashboard-card card-savings fade-up stagger-4">
+                <div class="dashboard-card card-savings glass-card card p-4 fade-up stagger-4">
                     <div class="card-icon"><i class="bi bi-safe2"></i></div>
-                    <div class="stat-label">Savings</div>
+                    <div class="stat-label">Savings Status</div>
                     <div class="stat-value {% if remaining < 0 %}negative{% endif %}">
                         ₹{{ remaining }}
                     </div>
@@ -433,58 +367,41 @@
 
         </div>
 
-        <!-- ── AI Insights ───────────────────── -->
-        <div class="glass-card p-4 mb-5 fade-up stagger-2">
-            <div class="insights-header">
-                <div class="insights-icon">
-                    <i class="bi bi-robot"></i>
-                </div>
-                <div>
-                    <h3 class="insights-title">AI Financial Insights</h3>
-                    <p class="insights-sub">Smart expense analysis powered by AI</p>
-                </div>
-            </div>
-
-            {% for insight in insights %}
-            <div class="insight-card mb-2">{{ insight }}</div>
-            {% else %}
-            <div class="empty-state py-4">
-                <div class="empty-state-icon"><i class="bi bi-stars"></i></div>
-                <div class="empty-state-title">No insights yet</div>
-                <p style="font-size:0.82rem">Add some expenses and AI insights will appear here.</p>
-            </div>
-            {% endfor %}
+        <div class="glass-card card p-4 mb-5 fade-up stagger-2">
+            <h3 class="font-sora fw-bold h5 mb-3" style="color: var(--text-primary);">
+                <i class="bi bi-robot me-2 text-info"></i>AI Insights
+            </h3>
+            <ul class="mb-0 ps-3 style-sm" style="color: var(--text-secondary); line-height: 1.7;">
+                {% for insight in insights %}
+                <li class="mb-2">{{ insight }}</li>
+                {% else %}
+                <span class="text-muted">No insights generated yet. Add expenses to get started.</span>
+                {% endfor %}
+            </ul>
         </div>
 
-        <!-- ── Add Expense + Navigation ─────── -->
         <div class="row g-4">
-
-            <!-- Add Expense Form -->
-            <div class="col-lg-4">
-                <div class="glass-card p-4 h-100">
+            
+            <div class="col-lg-5">
+                <div class="glass-card card p-4 h-100">
                     <div class="form-card-title">
                         <i class="bi bi-plus-circle-fill"></i>
                         Add Expense
                     </div>
 
                     <form action="/add" method="POST">
-
                         <div class="mb-3">
-                            <label class="form-label">Expense Title</label>
-                            <input type="text" class="form-control"
-                                   placeholder="e.g. Lunch at café"
-                                   name="title" required>
+                            <label class="form-label style-sm">Expense Title</label>
+                            <input type="text" class="form-control" placeholder="e.g. Lunch at café" name="title" required>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Amount (₹)</label>
-                            <input type="number" class="form-control"
-                                   placeholder="0.00"
-                                   name="amount" min="0" step="0.01" required>
+                            <label class="form-label style-sm">Amount (₹)</label>
+                            <input type="number" class="form-control" placeholder="0.00" name="amount" min="0" step="0.01" required>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Category</label>
+                            <label class="form-label style-sm">Category</label>
                             <select class="form-select" name="category">
                                 <optgroup label="Daily Life">
                                     <option>Food &amp; Dining</option>
@@ -546,37 +463,30 @@
                             </select>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-plus-lg me-2"></i>Add Expense
-                        </button>
+                        <button type="submit" class="btn btn-primary w-100 py-2">Add Expense</button>
                     </form>
                 </div>
             </div>
 
-            <!-- Navigation Cards -->
-            <div class="col-lg-8">
+            <div class="col-lg-7">
                 <div class="row g-3">
-
+                    
                     <div class="col-sm-6">
                         <a href="/expenses" class="text-decoration-none d-block h-100">
-                            <div class="navigation-card h-100">
-                                <div class="icon-wrap mb-3">
-                                    <i class="bi bi-receipt-cutoff" style="color:var(--accent-teal)"></i>
-                                </div>
-                                <h3>Expenses</h3>
-                                <p>View &amp; manage all your recorded expenses</p>
+                            <div class="navigation-card glass-card card p-4 h-100">
+                                <i class="bi bi-receipt-cutoff text-info h3 mb-3 d-block"></i>
+                                <h3>View Expenses</h3>
+                                <p>Review and manage all your historical transactions logs.</p>
                             </div>
                         </a>
                     </div>
 
                     <div class="col-sm-6">
                         <a href="/charts" class="text-decoration-none d-block h-100">
-                            <div class="navigation-card h-100">
-                                <div class="icon-wrap amber mb-3">
-                                    <i class="bi bi-bar-chart-line-fill" style="color:var(--accent-amber)"></i>
-                                </div>
-                                <h3>Charts</h3>
-                                <p>AI-powered analytics &amp; spending graphs</p>
+                            <div class="navigation-card glass-card card p-4 h-100">
+                                <i class="bi bi-bar-chart-line-fill text-warning h3 mb-3 d-block"></i>
+                                <h3>Analytics Charts</h3>
+                                <p>Visualize distributions and breakdown patterns via insights graphs.</p>
                             </div>
                         </a>
                     </div>
@@ -585,17 +495,13 @@
             </div>
 
         </div>
-    </div><!-- /page-wrap -->
+    </div><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Theme toggle + auto-dismiss toast -->
     <script>
-        // ── Theme ──────────────────────────────────────────
-        const body      = document.body;
-        const btn       = document.getElementById('themeToggle');
-        const icon      = document.getElementById('themeIcon');
+        // ── Theme Config Engine ──
+        const body = document.body;
+        const btn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
         const THEME_KEY = 'expenseTrackerTheme';
 
         function applyTheme(isLight) {
@@ -611,14 +517,13 @@
             applyTheme(!body.classList.contains('light-mode'));
         });
 
-        // ── Auto-dismiss toast after 4s ────────────────────
+        // ── Auto-dismiss Toast ──
         const toastEl = document.querySelector('.toast.show');
         if (toastEl) setTimeout(() => {
             bootstrap.Toast.getOrCreateInstance(toastEl).hide();
         }, 4000);
     </script>
 
-    <!-- External script -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>

@@ -7,159 +7,248 @@
     <title>Expense History</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
+        :root {
+            --bg-main: #060814;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.05);
+            --border-glow: rgba(0, 242, 254, 0.15);
+            --text-main: #F3F4F6;
+            --text-sub: #9CA3AF;
+            --text-ghost: #4B5563;
+            
+            /* Enhanced Premium Accent Palettes */
+            --teal-accent: #00F2FE;
+            --coral-accent: #FF4971;
+            --purple-accent: #7000FF;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --shadow-premium: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Light Mode Overrides if activated */
+        body.light-mode {
+            --bg-main: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F1F5F9;
+            --border-glow: rgba(14, 165, 233, 0.1);
+            --text-main: #0F172A;
+            --text-sub: #64748B;
+            --text-ghost: #94A3B8;
+            --glass-border: rgba(15, 23, 42, 0.08);
+            --shadow-premium: 0 15px 30px -10px rgba(15, 23, 42, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'DM Sans', sans-serif;
+            transition: background-color 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
         .page-wrap {
-            max-width: 900px;
+            max-width: 960px;
             margin: 0 auto;
-            padding: 40px 24px 80px;
+            padding: 40px 24px 100px;
         }
 
         /* ── Navbar ─────────────────────────── */
+        .navbar {
+            background: rgba(6, 8, 20, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 18px 24px;
+        }
+        body.light-mode .navbar {
+            background: rgba(248, 250, 252, 0.7);
+        }
         .nav-back {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.88rem;
+            gap: 6px;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text-sub);
             text-decoration: none;
-            padding: 7px 14px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-subtle);
-            background: rgba(255,255,255,0.05);
-            transition: color 0.25s, background 0.25s, border-color 0.25s;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            background: var(--bg-card);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .nav-back:hover {
-            color: var(--text-primary);
-            background: var(--bg-elevated);
-            border-color: var(--border-default);
+            color: var(--text-main);
+            background: var(--bg-card-hover);
+            transform: translateX(-2px);
         }
         .nav-page-title {
             font-family: 'Sora', sans-serif;
             font-weight: 700;
-            font-size: 1rem;
-            background: var(--grad-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 0.95rem;
+            letter-spacing: -0.01em;
+            color: var(--text-main);
         }
 
         /* ── Summary bar ────────────────────── */
         .summary-bar {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 28px;
+            gap: 16px;
+            margin-bottom: 36px;
         }
         .summary-tile {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: 16px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-premium);
+        }
+        .summary-tile::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+            pointer-events: none;
         }
         .summary-tile .s-label {
             font-size: 0.68rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            color: var(--text-sub);
         }
         .summary-tile .s-value {
             font-family: 'Sora', sans-serif;
             font-weight: 700;
-            font-size: 1.3rem;
+            font-size: 1.45rem;
             letter-spacing: -0.03em;
+            color: var(--text-main);
         }
 
         /* ── Search / filter bar ────────────── */
+        .filter-wrapper {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 12px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-premium);
+        }
         .filter-bar {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
             flex-wrap: wrap;
+        }
+        .search-container {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+        .search-container i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-ghost);
+            font-size: 0.9rem;
+            pointer-events: none;
         }
         .filter-bar input,
         .filter-bar select {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-default);
-            color: var(--text-primary);
-            border-radius: var(--radius-md);
-            padding: 9px 14px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            border-radius: 12px;
+            padding: 11px 14px;
             font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
         }
-        .filter-bar input { flex: 1; min-width: 180px; }
-        .filter-bar select { min-width: 160px; }
+        body.light-mode .filter-bar input,
+        body.light-mode .filter-bar select {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .filter-bar input { padding-left: 38px; }
+        .filter-bar select { min-width: 180px; width: auto; cursor: pointer; }
         .filter-bar input:focus,
         .filter-bar select:focus {
-            border-color: var(--accent-teal);
-            box-shadow: 0 0 0 3px var(--accent-teal-glow);
+            border-color: var(--teal-accent);
+            box-shadow: 0 0 0 3px var(--border-glow);
+            background: rgba(0, 0, 0, 0.25);
         }
-        .filter-bar input::placeholder { color: var(--text-muted); }
 
-        /* ── Expense card — NEW DESIGN ──────── */
+        /* ── Expense card ───────────────────── */
         .xcard {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
             padding: 0;
             overflow: hidden;
-            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
-            margin-bottom: 12px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            margin-bottom: 14px;
             display: flex;
             align-items: stretch;
+            position: relative;
         }
         .xcard:hover {
-            transform: translateY(-3px);
-            border-color: var(--border-default);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: var(--shadow-premium), 0 0 20px rgba(0, 242, 254, 0.03);
+            background: var(--bg-card-hover);
         }
 
-        /* Coloured left strip */
         .xcard-strip {
             width: 4px;
             flex-shrink: 0;
-            background: var(--grad-primary);
+            background: linear-gradient(to bottom, var(--teal-accent), var(--purple-accent));
+            opacity: 0.6;
+            transition: opacity 0.3s;
         }
+        .xcard:hover .xcard-strip { opacity: 1; }
 
-        /* Icon column */
         .xcard-icon-col {
-            width: 64px;
+            width: 68px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 4px;
         }
         .xcard-icon {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
+            transition: transform 0.3s ease;
         }
+        .xcard:hover .xcard-icon { transform: scale(1.05); }
 
-        /* Body */
         .xcard-body {
             flex: 1;
-            padding: 16px 12px 16px 4px;
+            padding: 16px 14px 16px 4px;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .xcard-title {
             font-family: 'Sora', sans-serif;
             font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-primary);
+            font-size: 0.98rem;
+            color: var(--text-main);
             margin: 0 0 6px;
             white-space: nowrap;
             overflow: hidden;
@@ -168,259 +257,282 @@
         .xcard-meta {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         .xcard-cat {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 2px 9px;
-            border-radius: 20px;
-            font-size: 0.68rem;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 30px;
+            font-size: 0.65rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
-            background: var(--accent-teal-bg);
-            color: var(--accent-teal);
-            border: 1px solid rgba(0,212,170,0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-sub);
+            border: 1px solid var(--glass-border);
         }
         .xcard-date {
             font-size: 0.74rem;
-            color: var(--text-muted);
+            color: var(--text-ghost);
             display: inline-flex;
             align-items: center;
             gap: 4px;
         }
 
-        /* Right side */
         .xcard-right {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             padding: 16px 20px;
             flex-shrink: 0;
         }
         .xcard-amount {
             font-family: 'Sora', sans-serif;
-            font-weight: 800;
-            font-size: 1.15rem;
-            letter-spacing: -0.03em;
-            color: var(--accent-coral);
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
             white-space: nowrap;
         }
+        
+        /* Subtle structural Action button style */
         .btn-del {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 5px 13px;
+            padding: 5px 12px;
             border-radius: 8px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 600;
-            color: var(--accent-coral);
-            background: var(--accent-coral-bg);
-            border: 1px solid rgba(255,107,107,0.2);
+            color: var(--text-ghost);
+            background: transparent;
+            border: 1px solid var(--glass-border);
             text-decoration: none;
             white-space: nowrap;
-            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+            transition: all 0.2s ease;
+            opacity: 0;
+            transform: translateY(3px);
         }
+        .xcard:hover .btn-del { opacity: 1; transform: translateY(0); }
         .btn-del:hover {
-            background: rgba(255,107,107,0.2);
-            border-color: rgba(255,107,107,0.45);
-            color: var(--accent-coral);
-            transform: translateY(-1px);
+            background: rgba(255, 73, 113, 0.1);
+            border-color: rgba(255, 73, 113, 0.3);
+            color: var(--coral-accent);
         }
 
-        /* Category icon colours */
-        .ic-food    { background: rgba(245,166,35,0.12);  color: #f5a623; }
-        .ic-travel  { background: rgba(124,140,248,0.12); color: #7c8cf8; }
-        .ic-health  { background: rgba(0,212,170,0.12);   color: #00d4aa; }
-        .ic-shop    { background: rgba(255,107,107,0.12); color: #ff6b6b; }
-        .ic-bills   { background: rgba(245,166,35,0.12);  color: #f5a623; }
-        .ic-edu     { background: rgba(124,140,248,0.12); color: #7c8cf8; }
-        .ic-default { background: rgba(99,130,181,0.12);  color: #8fa3be; }
+        /* ── Category Icon Themes ──────────────── */
+        .ic-food    { background: rgba(245, 166, 35, 0.1);  color: #FFB020; }
+        .ic-travel  { background: rgba(99, 102, 241, 0.1);  color: #6366F1; }
+        .ic-health  { background: rgba(16, 185, 129, 0.1);  color: #10B981; }
+        .ic-shop    { background: rgba(236, 72, 153, 0.1);  color: #EC4899; }
+        .ic-bills   { background: rgba(14, 165, 233, 0.1);  color: #0EA5E9; }
+        .ic-edu     { background: rgba(168, 85, 247, 0.1);  color: #A855F7; }
+        .ic-default { background: rgba(148, 163, 184, 0.1); color: #94A3B8; }
 
-        /* Section label */
+        /* Typography & Layout Spacers */
         .section-label {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: var(--text-muted);
-            margin-bottom: 14px;
+            letter-spacing: 0.1em;
+            color: var(--text-ghost);
+            margin-bottom: 16px;
+            display: block;
         }
-
-        /* Page heading */
         .page-heading {
             font-family: 'Sora', sans-serif;
-            font-weight: 700;
-            font-size: 1.5rem;
-            letter-spacing: -0.03em;
-            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 1.75rem;
+            letter-spacing: -0.04em;
+            color: var(--text-main);
             margin: 0;
         }
-
-        /* Count badge */
         .count-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
             padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            border-radius: 30px;
+            font-size: 0.78rem;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text-sub);
         }
 
-        /* Empty state */
+        /* Empty states */
         .empty-wrap {
             text-align: center;
             padding: 80px 32px;
+            background: var(--bg-card);
+            border: 1px dashed var(--glass-border);
+            border-radius: 24px;
         }
         .empty-icon-box {
-            width: 80px;
-            height: 80px;
-            border-radius: 24px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            color: var(--text-muted);
-            margin: 0 auto 20px;
+            font-size: 1.75rem;
+            color: var(--text-ghost);
+            margin: 0 auto 24px;
         }
         .empty-title {
             font-family: 'Sora', sans-serif;
             font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--text-secondary);
+            font-size: 1.15rem;
+            color: var(--text-main);
             margin-bottom: 8px;
         }
+        
+        .btn-premium {
+            background: var(--text-main);
+            color: var(--bg-main);
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 10px 24px;
+            border-radius: 12px;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-premium:hover {
+            background: var(--teal-accent);
+            color: #060814;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+        }
 
-        /* No results (hidden by default) */
         #noResults {
             display: none;
             text-align: center;
-            padding: 48px 0;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+            padding: 64px 0;
+            color: var(--text-sub);
+            font-size: 0.92rem;
         }
 
+        @media (max-width: 768px) {
+            .btn-del { opacity: 1; transform: none; }
+        }
         @media (max-width: 576px) {
-            .summary-bar { grid-template-columns: repeat(2, 1fr); }
-            .xcard-right { padding: 12px 14px; }
-            .xcard-amount { font-size: 1rem; }
+            .summary-bar { grid-template-columns: 1fr; gap: 12px; }
+            .xcard { flex-direction: column; }
+            .xcard-strip { width: 100%; height: 4px; }
+            .xcard-icon-col { width: 100%; justify-content: flex-start; padding: 16px 16px 0; }
+            .xcard-body { padding: 12px 16px; }
+            .xcard-right { padding: 0 16px 16px; flex-direction: row; justify-content: space-between; align-items: center; }
+            .filter-bar select { width: 100%; }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar px-4">
+    <nav class="navbar d-flex justify-content-between align-items-center">
         <a href="/" class="nav-back">
-            <i class="bi bi-arrow-left-short"></i>
-            Dashboard
+            <i class="bi bi-arrow-left"></i> Dashboard
         </a>
-        <span class="nav-page-title">Expense History</span>
+        <span class="nav-page-title">Analytics Engine</span>
     </nav>
 
     <div class="page-wrap">
 
-        <!-- Heading -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-md-center align-items-start flex-column flex-md-row gap-3 mb-4">
             <div>
                 <h2 class="page-heading">Transactions</h2>
-                <p style="font-size:0.82rem;color:var(--text-muted);margin:4px 0 0;">
-                    All your recorded expenses
+                <p style="font-size:0.88rem; color:var(--text-sub); margin:4px 0 0;">
+                    Complete historical record of architectural outlays.
                 </p>
             </div>
             <span class="count-badge">
-                <i class="bi bi-receipt"></i>
-                {{ expenses|length }} Expense{{ 's' if expenses|length != 1 }}
+                <i class="bi bi-wallet2 me-2"></i>
+                {{ expenses|length }} Run{{ 's' if expenses|length != 1 }}
             </span>
         </div>
 
         {% if expenses %}
 
-        <!-- Summary tiles -->
         <div class="summary-bar">
             <div class="summary-tile">
-                <span class="s-label">Total Spent</span>
-                <span class="s-value" style="color:var(--accent-coral)">₹{{ total_spent }}</span>
+                <span class="s-label">Total Volume</span>
+                <span class="s-value" style="color: var(--coral-accent)">₹{{ total_spent }}</span>
             </div>
             <div class="summary-tile">
-                <span class="s-label">Transactions</span>
+                <span class="s-label">Frequency Count</span>
                 <span class="s-value">{{ expenses|length }}</span>
             </div>
             <div class="summary-tile">
-                <span class="s-label">Latest Entry</span>
-                <span class="s-value" style="font-size:0.85rem;color:var(--text-secondary)">
+                <span class="s-label">Most Recent</span>
+                <span class="s-value" style="font-size:0.88rem; color:var(--text-sub); padding-top:4px;">
                     {{ expenses[0][5] if expenses }}
                 </span>
             </div>
         </div>
 
-        <!-- Filter / Search -->
-        <div class="filter-bar">
-            <input type="text" id="searchInput" placeholder="🔍  Search by title…">
-            <select id="categoryFilter">
-                <option value="">All Categories</option>
-                <option>Food &amp; Dining</option>
-                <option>Groceries</option>
-                <option>Transportation</option>
-                <option>Fuel</option>
-                <option>Shopping</option>
-                <option>Entertainment</option>
-                <option>Movies</option>
-                <option>Gaming</option>
-                <option>Gym &amp; Fitness</option>
-                <option>Personal Care</option>
-                <option>Beauty</option>
-                <option>Clothing</option>
-                <option>Education</option>
-                <option>Books</option>
-                <option>Health &amp; Medical</option>
-                <option>Bills &amp; Utilities</option>
-                <option>Electricity Bill</option>
-                <option>Water Bill</option>
-                <option>Internet</option>
-                <option>Mobile Recharge</option>
-                <option>Rent</option>
-                <option>EMI</option>
-                <option>Insurance</option>
-                <option>Subscriptions</option>
-                <option>Investment</option>
-                <option>Savings</option>
-                <option>Taxes</option>
-                <option>Business</option>
-                <option>Freelancing</option>
-                <option>Family</option>
-                <option>Gifts &amp; Donations</option>
-                <option>Festivals</option>
-                <option>Child Care</option>
-                <option>Pets</option>
-                <option>Electronics</option>
-                <option>Home Appliances</option>
-                <option>Furniture</option>
-                <option>Maintenance</option>
-                <option>Travel</option>
-                <option>Emergency</option>
-                <option>Other</option>
-            </select>
+        <div class="filter-wrapper">
+            <div class="filter-bar">
+                <div class="search-container">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search records by description...">
+                </div>
+                <select id="categoryFilter">
+                    <option value="">All Matrix Domains</option>
+                    <option>Food &amp; Dining</option>
+                    <option>Groceries</option>
+                    <option>Transportation</option>
+                    <option>Fuel</option>
+                    <option>Shopping</option>
+                    <option>Entertainment</option>
+                    <option>Movies</option>
+                    <option>Gaming</option>
+                    <option>Gym &amp; Fitness</option>
+                    <option>Personal Care</option>
+                    <option>Beauty</option>
+                    <option>Clothing</option>
+                    <option>Education</option>
+                    <option>Books</option>
+                    <option>Health &amp; Medical</option>
+                    <option>Bills &amp; Utilities</option>
+                    <option>Electricity Bill</option>
+                    <option>Water Bill</option>
+                    <option>Internet</option>
+                    <option>Mobile Recharge</option>
+                    <option>Rent</option>
+                    <option>EMI</option>
+                    <option>Insurance</option>
+                    <option>Subscriptions</option>
+                    <option>Investment</option>
+                    <option>Savings</option>
+                    <option>Taxes</option>
+                    <option>Business</option>
+                    <option>Freelancing</option>
+                    <option>Family</option>
+                    <option>Gifts &amp; Donations</option>
+                    <option>Festivals</option>
+                    <option>Child Care</option>
+                    <option>Pets</option>
+                    <option>Electronics</option>
+                    <option>Home Appliances</option>
+                    <option>Furniture</option>
+                    <option>Maintenance</option>
+                    <option>Travel</option>
+                    <option>Emergency</option>
+                    <option>Other</option>
+                </select>
+            </div>
         </div>
 
-        <!-- List -->
-        <p class="section-label">All Expenses</p>
+        <span class="section-label">Ledger Entries</span>
 
         <div id="expenseList">
         {% for expense in expenses %}
-        {# indices: [0]=id [1]=user_id [2]=title [3]=amount [4]=category [5]=date [6]=time #}
         {% set cat = expense[4] | lower %}
         {% if 'food' in cat or 'dining' in cat or 'grocer' in cat %}
             {% set ic = 'ic-food' %}{% set icon = 'bi-egg-fried' %}
@@ -456,15 +568,15 @@
                 <div class="xcard-title">{{ expense[2] }}</div>
                 <div class="xcard-meta">
                     <span class="xcard-cat">
-                        <i class="bi bi-tag-fill"></i>
+                        <i class="bi bi-tag me-1"></i>
                         {{ expense[4] }}
                     </span>
                     <span class="xcard-date">
-                        <i class="bi bi-calendar3"></i>
+                        <i class="bi bi-calendar3 me-1"></i>
                         {{ expense[5] }}
                     </span>
                     <span class="xcard-date">
-                        <i class="bi bi-clock"></i>
+                        <i class="bi bi-clock me-1"></i>
                         {{ expense[6] }}
                     </span>
                 </div>
@@ -474,8 +586,8 @@
                 <div class="xcard-amount">− ₹{{ expense[3] }}</div>
                 <a href="/delete/{{ expense[0] }}"
                    class="btn-del"
-                   onclick="return confirm('Delete \'{{ expense[2] }}\'?')">
-                    <i class="bi bi-trash3-fill"></i>
+                   onclick="return confirm('Delete record item \'{{ expense[2] }}\'?')">
+                    <i class="bi bi-trash3"></i>
                     Delete
                 </a>
             </div>
@@ -485,20 +597,20 @@
         </div>
 
         <div id="noResults">
-            <i class="bi bi-search" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:12px"></i>
-            No expenses match your search.
+            <i class="bi bi-search" style="font-size:2rem; opacity:0.2; display:block; margin-bottom:16px"></i>
+            No transactional records match your specified queries.
         </div>
 
         {% else %}
 
         <div class="empty-wrap">
-            <div class="empty-icon-box"><i class="bi bi-receipt-cutoff"></i></div>
-            <div class="empty-title">No expenses yet</div>
-            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:24px">
-                Go back to the dashboard to add your first expense.
+            <div class="empty-icon-box"><i class="bi bi-patch-minus"></i></div>
+            <div class="empty-title">No transactions compiled</div>
+            <p style="font-size:0.88rem; color:var(--text-sub); margin-bottom:24px; max-width: 320px; margin-left: auto; margin-right: auto;">
+                Return to your core deployment center to initiate system transaction tracking metrics.
             </p>
-            <a href="/" class="btn btn-primary px-4">
-                <i class="bi bi-plus-lg me-2"></i>Add First Expense
+            <a href="/" class="btn btn-premium px-4">
+                <i class="bi bi-plus-lg me-2"></i>Generate Metric Entry
             </a>
         </div>
 
@@ -509,19 +621,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // ── Theme ──────────────────────────────
+        // ── Theme Sync ──────────────────────────
         if (localStorage.getItem('expenseTrackerTheme') === 'light') {
             document.body.classList.add('light-mode');
         }
 
-        // ── Search + Filter ────────────────────
+        // ── Advanced Live Evaluation Filter ────
         const searchInput    = document.getElementById('searchInput');
         const categoryFilter = document.getElementById('categoryFilter');
         const cards          = document.querySelectorAll('.xcard');
         const noResults      = document.getElementById('noResults');
 
         function filterCards() {
-            const q   = searchInput ? searchInput.value.toLowerCase() : '';
+            const q   = searchInput ? searchInput.value.toLowerCase().trim() : '';
             const cat = categoryFilter ? categoryFilter.value.toLowerCase() : '';
             let visible = 0;
 
@@ -529,7 +641,8 @@
                 const titleMatch = card.dataset.title.includes(q);
                 const catMatch   = cat === '' || card.dataset.category.toLowerCase() === cat;
                 const show       = titleMatch && catMatch;
-                card.style.display = show ? '' : 'none';
+                
+                card.style.display = show ? 'flex' : 'none';
                 if (show) visible++;
             });
 
